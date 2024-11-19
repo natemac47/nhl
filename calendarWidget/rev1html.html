@@ -1,0 +1,79 @@
+<section class="panel panel-{{::c.options.color}} b event-calendar-widget" 
+         ng-show="data.thisYearItems.length + data.nextYearItems.length >= 0" 
+         ng-class="[{'show-heading': c.data.displayHeadingText},
+                   {'show-bounding-box': c.data.displayBoundingBox},
+                   {'show-background': c.data.showBackground}]">
+
+  <!-- Static Title at the Top -->
+  <div class="panel-heading">
+    <h2 class="holidays-title">Holidays</h2>
+  </div>
+  
+  <!-- Region Dropdown on the Right -->
+  <div class="pull-right">
+    <select ng-model="selectedRegion"
+            ng-options="region.sys_id as region.u_region for region in data.regions"
+            ng-change="filterByRegion(selectedRegion)"
+            class="form-control region-dropdown">
+        <option value="">Select Region</option>
+    </select>
+  </div>
+
+  <!-- No Events Message -->
+  <div class="no-events-message" ng-if="data.thisYearItems.length === 0 && data.nextYearItems.length === 0">
+      <p>No events found for the selected region.</p>
+  </div>
+
+  <!-- Tab Section for This Year and Next Year Holidays -->
+  <div class="hr-tab" aria-label="{{::data.thisYear}}-{{::data.nextYear}} Holidays"
+       ng-class="{'preview-outline preview-info-container-parent': data.calendar.is_preview && data.calendar.is_content_active == 1, 'preview-outline-inactive preview-info-container-parent': data.calendar.is_preview && data.calendar.is_content_active == 0}">
+
+    <portal-content-preview-info-tab is-compact="true" item="data.calendar" data="data">
+    </portal-content-preview-info-tab>
+
+    <!-- Year Tabs -->
+    <ul class="controller row" role="tablist">
+      <li ng-repeat="year in [data.thisYear, data.nextYear] track by $index"
+          ng-class="['col-xs-2', {'active': activeTab === year}, {'active': !activeTab && $first}]"
+          ng-click="showTabContent($event, $index)"
+          aria-label="Year {{ ::year }}"
+          aria-controls="year{{::year}}TabPanel"
+          aria-selected="{{ selectedYear === $index }}"
+          id="year{{::year}}"
+          tabindex="{{selectedYear === $index ? 0 : -1 }}"
+          role="tab">{{::year}}</li>
+    </ul>
+
+    <!-- Events Stage -->
+    <div class="stage">
+      <ul ng-repeat="year in ['thisYear', 'nextYear'] track by $index"
+          ng-class="[{'active': activeTab === data[year]}, {'active': !activeTab && $first}]"
+          id="year{{data[year]}}TabPanel"
+          aria-labelledby="year{{data[year]}}"
+          aria-hidden="{{ selectedYear !== $index}}"
+          role="tabpanel list">
+        <li ng-repeat="event in data[year+'Items'] track by $index"
+            class="row">
+          <span>
+            {{event.name}}
+          </span>
+          <small class="pull-right">{{event.day}}, {{event.date}}</small>
+        </li>
+        <li ng-if="data[year+'Items'].length == 0" class="row">
+          <span>No Events</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Download All Events Button -->
+    <div class="stage right">
+      <a href="javascript:void(0)"
+         ng-click="downloadEventSchedule()"
+         ng-keypress="handleKeyBoardEvent($event)"
+         role="button"
+         tabindex="0"
+         aria-label="{{data.CONST.TEXT.ADD_ALL_EVENTS + ' ' + data.title}}">
+        <i class="fa fa-calendar-plus-o"></i> {{data.CONST.TEXT.ADD_ALL_EVENTS}}</a>
+    </div>
+  </div>
+</section>
