@@ -1,0 +1,197 @@
+<div class="panel panel-default b">
+    <h2 class="page-title">${Employee Directory}</h2>
+    <uib-tabset active="active" class="tabs_set">
+        <uib-tab index="0" heading="All" class="tabList">
+            <div>
+                <div class="filters">
+                    <div class="col-md-3 col-xs-12 fit-content">
+                        <select class="user-filter sc-basic-select adjust-width" ng-model="c.depFilter" id="departDD" ng-change="c.addLocationDepartmentfilter()" ng-options="item as item.name for item in c.data.departments track by item.sys_id" ng-model-options="{debounce: 250}">
+                        </select>
+                    </div>
+                    <div class="col-md-3 col-xs-12 fit-content">
+                        <select class="user-filter sc-basic-select adjust-width" ng-model="c.locFilter" id="departDD" ng-change="c.addLocationDepartmentfilter()" ng-options="item as item.name for item in c.data.locations track by item.sys_id">
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-xs-12 fit-content skills-checkboxes">
+                        <div class="skill-checkbox-container">
+                            <div class="skill-checkbox notary-checkbox">
+                                <label>
+                                    <input type="checkbox" ng-model="c.notaryFilter" ng-change="c.addLocationDepartmentfilter()">
+                                    <span class="checkbox-label">${Notary}</span>
+                                </label>
+                            </div>
+                            <div class="skill-checkbox first-aid-checkbox">
+                                <label>
+                                    <input type="checkbox" ng-model="c.firstAidFilter" ng-change="c.addLocationDepartmentfilter()">
+                                    <span class="checkbox-label">${First Aid}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-xs-12 fit-content">
+                        <sn-record-picker name="users_list" field="name" table="'sys_user'" display-field="'name'" display-fields="'email'" search-fields="'name,email'" value-field="'sys_id'" placeholder="Search for employee" default-query="c.addLocDeptFilterForEmpSearch" page-size="10" id="employee-select"></sn-record-picker>
+                    </div>
+                </div>
+
+                <div class="panel-body all-header">
+                    <div role="rowgroup" class="visible-md-block visible-lg-block header-row">
+                        <div role="row">
+                            <div role="columnheader" class="header-column col-md-2">
+                                <span>${Name}</span>
+                                <span class="caret" ng-class="{'caret-up' : sortAll.name}"></span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-1 org-chart" ng-if="c.data.org_page_exists">
+                                <span>${Org Chart}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-3">
+                                <span>${Job Title &amp; Department}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-3">
+                                <span>${Contact}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-2">
+                                <span>${Location}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-1">
+                                <span>${Skills}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="visible-md-block visible-lg-block" ng-repeat="member in c.data.usersInfo | limitTo: c.data.usersInfo.length" ng-class="{'even-row' : $index % 2 != 0}">
+                            <div ng-include="'userView.html'" class="user-view-template"></div>
+                        </div>
+                        <div class="visible-xs-block visible-sm-block" ng-repeat="member in c.data.usersInfo | limitTo: c.data.usersInfo.length" ng-class="{'even-row' : $index % 2 != 0}">
+                            <div ng-include="'userViewSmallDevices.html'" class="user-view-template"></div>
+                        </div>
+                        <div ng-if="ifShowMore" class="load-more">
+                            <a ng-click="c.loadMore()">${Show More}</a>
+                        </div>
+                        <div ng-if="c.data.usersInfo.length == 0">
+                            <div class="no-data">
+                                <span>${No users found.}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </uib-tab>
+
+        <uib-tab index="1" heading="My Team" class="tabList" select="getMyTeam()" ng-click="getMyTeam()">
+            <div class="myTeam_container team-header">
+                <div class="myManager">
+                    <div class="team-header-title">${Manager}</div>
+                    <div role="rowgroup" ng-if="myManagerModel.length > 0">
+                        <div role="row" class="visible-lg-block visible-md-block header-row">
+                            <div role="columnheader" class="header-column col-md-2">
+                                <p>${Name}</p>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-1 org-chart" ng-if="c.data.org_page_exists">
+                                <p>${Org Chart}</p>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-3">
+                                <p>${Job Title &amp; Department}</p>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-3">
+                                <p>${Contact}</p>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-2">
+                                <p>${Location}</p>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-1">
+                                <p>${Skills}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="visible-md-block visible-lg-block" ng-repeat="member in myManagerModel" ng-class="{'even-row' : $index % 2 != 0}">
+                                <div ng-include="'userView.html'" class="user-view-template"></div>
+                            </div>
+                            <div class="visible-xs-block visible-sm-block" ng-repeat="member in myManagerModel" ng-class="{'even-row' : $index % 2 != 0}">
+                                <div ng-include="'userViewSmallDevices.html'" class="user-view-template"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="myManagerModel.length == 0">
+                        <div class="no-data">
+                            <span>${You do not have a manager defined.}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div ng-if="teamMembers.length > 0" class="team-header">
+                    <div class="team-header-title">${Coworkers ({{teamMembers.length}})}</div>
+                    <div role="rowgroup">
+                        <div role="row" class="visible-lg-block visible-md-block header-row">
+                            <div role="columnheader" class="header-column col-md-2">
+                                <span>${Name}</span>
+                                <span class="caret" ng-class="{'caret-up' : sortMember.name}"></span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-1 org-chart" ng-if="c.data.org_page_exists">
+                                <span>${Org Chart}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-3">
+                                <span>${Job Title &amp; Department}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-3">
+                                <span>${Contact}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-2">
+                                <span>${Location}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-1">
+                                <span>${Skills}</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="visible-md-block visible-lg-block" ng-repeat="member in teamMembers" ng-class="{'even-row' : $index % 2 != 0}">
+                                <div ng-include="'userView.html'" class="user-view-template"></div>
+                            </div>
+                            <div class="visible-xs-block visible-sm-block" ng-repeat="member in teamMembers" ng-class="{'even-row' : $index % 2 != 0}">
+                                <div ng-include="'userViewSmallDevices.html'" class="user-view-template"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div ng-if="directReports.length > 0" class="team-header">
+                    <div class="team-header-title">${Reportees ({{directReports.length}})}</div>
+                    <div role="rowgroup">
+                        <div role="row" class="visible-lg-block visible-md-block header-row">
+                            <div role="columnheader" class="header-column col-md-2">
+                                <span>${Name}</span>
+                                <span class="caret" ng-class="{'caret-up' : sortReportee.name}"></span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-1 org-chart" ng-if="c.data.org_page_exists">
+                                <span>${Org Chart}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-3">
+                                <span>${Job Title &amp; Department}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-3">
+                                <span>${Contact}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-2">
+                                <span>${Location}</span>
+                            </div>
+                            <div role="columnheader" class="header-column col-md-1">
+                                <span>${Skills}</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="visible-md-block visible-lg-block" ng-repeat="member in directReports" ng-class="{'even-row' : $index % 2 != 0}">
+                                <div ng-include="'userView.html'" class="user-view-template"></div>
+                            </div>
+                            <div class="visible-xs-block visible-sm-block" ng-repeat="member in directReports" ng-class="{'even-row' : $index % 2 != 0}">
+                                <div ng-include="'userViewSmallDevices.html'" class="user-view-template"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </uib-tab>
+    </uib-tabset>
+</div>
