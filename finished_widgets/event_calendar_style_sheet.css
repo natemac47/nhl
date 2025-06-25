@@ -1,0 +1,212 @@
+.v62286fe383ade2103fa59d50ceaad310 .view-toggle button {
+  border: none !important;
+  color: #bcbcbc !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+}
+
+.v62286fe383ade2103fa59d50ceaad310 .view-toggle button.active {
+  background: #ffffff !important;
+  color: #0055E9 !important;
+}
+  
+
+.v62286fe383ade2103fa59d50ceaad310 .events-table th {
+  color: var(--Grayscale-Black, #000);
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: normal; 
+}
+}
+
+.v62286fe383ade2103fa59d50ceaad310 .sortable-header {
+  color: var(--Grayscale-Black, #000);
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: normal; 
+}
+
+.event-type-badge {
+  font-family: Inter !important;
+  font-size: 14px !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  line-height: normal !important;
+}
+
+.event-date-cell {
+  color: var(--Grayscale-Black, #000);
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
+
+.event-title-text {
+  color: var(--Grayscale-Black, #000);
+  font-family: Inter;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.calendar-cell.today {
+  border: 2px solid var(--Anchor-Blue, #0042BB) !important;
+}
+
+.v62286fe383ade2103fa59d50ceaad310 .calendar-year-grid .calendar-cell {
+  color: var(--Grayscale-Black, #000) !important;
+  font-family: Inter !important;
+  font-size: 24px !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  line-height: normal !important;
+}
+
+.day-num {
+  color: var(--Grayscale-White, #FFF) !important;
+  text-align: center !important;
+  font-family: Inter !important;
+  font-size: 13px !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+  line-height: normal !important;
+}
+
+.v62286fe383ade2103fa59d50ceaad310 .calendar-cell .day-num {
+  height: 24px !important;
+  width: 24px !important;
+  border-radius: 24px !important;
+  text-align: center;
+  font-family: Inter;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+
+html.ltr.sn-sp-page.page-5fa25ae83b96e61094222fd0c5e45aa9.v5fa25ae83b96e61094222fd0c5e45aa9 body.ng-scope div.flex-row div#sp-main-wrapper.sp-page-root.page.flex-column.sp-can-animate section.flex-grow.page.sp-scroll.flex-column main.body.padding-top.flex-grow.ng-scope {
+    background: linear-gradient(180deg, #4A4A4A 0%, #000 100%);
+}
+
+html.ltr.sn-sp-page.page-5fa25ae83b96e61094222fd0c5e45aa9.v5fa25ae83b96e61094222fd0c5e45aa9 body.ng-scope div.flex-row div#sp-main-wrapper.sp-page-root.page.flex-column.sp-can-animate section.flex-grow.page.sp-scroll.flex-column main.body.padding-top.flex-grow.ng-scope div.ng-scope.c940396e83b96e61094222fd0c5e45a95 div.ng-scope.container sp-page-row.ng-scope.ng-isolate-scope div.sp-row-content.row div.col-md-12 span.ng-scope div#xb203d22c3b96e61094222fd0c5e45a25.v62286fe383ade2103fa59d50ceaad310.ng-scope {
+  background-color: white !important;
+  margin-top: 50px;
+  margin-bottom: 92px;
+  border-radius: 8px;
+  padding-bottom: 52px !important;
+}
+
+.calendar-title {
+  color: var(--Grayscale-Black, #000) !important;
+  font-family: Inter !important;
+  font-size: 36px !important; 
+  font-style: normal !important;
+  font-weight: 700 !important;
+  line-height: normal !important;
+  margin-top: 36px !important;
+}
+
+
+.v62286fe383ade2103fa59d50ceaad310 .calendar-tabs .nav-btn {
+  color: var(--Grayscale-Black, #000) !important;
+  text-align: center !important;
+  font-family: Inter !important;
+  font-size: 18px !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  line-height: normal !important;
+}
+
+.current-date {
+    color: var(--Grayscale-Black, #000) !important;
+    text-align: right !important;
+    font-family: Inter !important;
+    font-size: 24px !important;
+    font-style: normal !important;
+    font-weight: 700 !important;
+    line-height: normal !important;
+    margin-top: 36px !important;
+}
+
+.filter-dropdown {
+  color: var(--Grayscale-Black, #000) !important;
+  font-family: Inter !important;
+  font-size: 16px !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+  line-height: normal !important;
+  display: flex !important;
+  height: 36px !important;
+  padding: 6px 12px;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 0 0 !important;
+  border-radius: 4px !important;
+  border: 1px solid var(--Grayscale-Dark-Gray, #4A4A4A) !important;
+  background: var(--Grayscale-White, #FFF) !important;
+}
+
+.calendar-period-label {
+  color: var(--Grayscale-Black, #000) !important;
+  font-family: Inter !important;
+  font-size: 30px !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  line-height: normal !important;
+  margin-top: 36px !important;
+  margin-bottom: 12px !important;
+}
+
+.nav-arrow {
+  margin-top: 36px !important;
+  margin-bottom: 12px !important;
+  font-size: 30px !important;
+}
+
+.calendar-days {
+  font-family: Inter !important;
+  font-size: 18px !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  line-height: normal !important;
+  background-color: white !important;
+  text-align: left !important;
+  margin-left: 8px !important;
+}
+
+.v62286fe383ade2103fa59d50ceaad310 .search-box {
+  display: flex;
+  height: 36px;
+  padding: 6px 8px;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+ border-radius: 4px 0px 0px 4px;
+ border: 1px solid var(--Grayscale-Dark-Gray, #4A4A4A);
+}
+
+html.ltr.sn-sp-page.page-5fa25ae83b96e61094222fd0c5e45aa9.v5fa25ae83b96e61094222fd0c5e45aa9 body.ng-scope div.flex-row div#sp-main-wrapper.sp-page-root.page.flex-column.sp-can-animate section.flex-grow.page.sp-scroll.flex-column main.body.padding-top.flex-grow.ng-scope div.ng-scope.c940396e83b96e61094222fd0c5e45a95 div.ng-scope.container sp-page-row.ng-scope.ng-isolate-scope div.sp-row-content.row div.col-md-12 span.ng-scope div#xb203d22c3b96e61094222fd0c5e45a25.v62286fe383ade2103fa59d50ceaad310.ng-scope div.events-calendar-widget.ng-scope div.calendar-filters div.search-box input {
+  color: var(--Grayscale-Black, #000);
+  font-family: Inter;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.event-title {
+  color: var(--Additional-Black, #000) !important;
+  font-family: Inter !important;
+  font-size: 10px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  line-height: normal !important;
+}
