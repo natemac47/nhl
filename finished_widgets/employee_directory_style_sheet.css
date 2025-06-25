@@ -1,0 +1,214 @@
+.notary-checkbox input[type="checkbox"]:checked {
+    background-color: #0042BB;
+    border-color: #0042BB;
+  	accent-color: #0042BB;
+    box-shadow: 0 0 0 1px #0042BB;
+}
+
+.first-aid-checkbox input[type="checkbox"]:checked {
+    background-color: #0042BB;
+    border-color: #0042BB;
+    box-shadow: 0 0 0 1px #0042BB;
+    accent-color: #0042BB;
+}
+
+
+.notary-checkbox input[type="checkbox"]:checked {
+    background-color: #0042BB;
+    border-color: #0042BB;
+    box-shadow: 0 0 0 1px #0042BB;
+}
+
+
+.checkbox-label  {
+  color: var(--Grayscale-Black, #000) !important;
+  font-family: Inter !important;
+  font-size: 16px !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+  line-height: normal !important;
+}
+
+.employee-phone-link {
+  padding-left: 90px;
+}
+
+html.ltr.sn-sp-page.page-40218b5c77b20110f89bb73aba1061f4.v40218b5c77b20110f89bb73aba1061f4 body.ng-scope div.flex-row div#sp-main-wrapper.sp-page-root.page.flex-column.sp-can-animate section.flex-grow.page.sp-scroll.flex-column main.body.padding-top.flex-grow.ng-scope {
+background: var(--Bkg-Gradient, linear-gradient(180deg, #4A4A4A 0%, #000 100%)) !important;
+}
+
+	.va6722f3277520110f89bb73aba10612e .header-column {
+      white-space: nowrap;
+      overflow: ellipsis;
+      padding-top: 1.8rem !important;
+}
+
+	.va6722f3277520110f89bb73aba10612e .person.row {
+ 		 width: 103%;
+}
+
+
+	.va6722f3277520110f89bb73aba10612e .load-more {
+ 	    border-radius: 4px;
+		border: 1px solid var(--Anchor-Blue, #0042BB);
+		background: rgba(0, 85, 233, 0.05);
+		display: flex;
+        width: 448px;
+        height: 48px;
+        padding: 6px 36px;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+      	font-weight: 700;
+      	color: color: var(--Anchor-Blue, #0042BB);
+      	width: 30% !important;
+     	margin: 0 auto;
+}
+
+	.va6722f3277520110f89bb73aba10612e .person.row {
+     height: 95px !important;
+}
+     
+
+	.email-address { 
+      color: var(--Anchor-Blue, #0042BB);
+      font-family: Inter;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: normal;
+}
+
+   .phone-number { 
+      color: var(--Anchor-Blue, #0042BB);
+      font-family: Inter;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: normal;
+}
+
+
+  .office-location { 
+    color: var(--Grayscale-Black, #000);
+    font-family: Inter;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    padding-left: 20px;
+}
+
+	.va6722f3277520110f89bb73aba10612e .tabs_set .nav-tabs > li.active > a {
+		border-bottom: 2px solid var(--Grayscale-Black, #000) !important;
+}
+
+   .va6722f3277520110f89bb73aba10612e .user-filter {
+    border-radius: 4px;
+	border: 1px solid var(--Grayscale-Dark-Gray, #4A4A4A);
+	background: var(--Grayscale-White, #FFF);
+}
+
+  .select2-container .select2-choice > .select2-chosen {
+    color: black;
+    font-family: Inter;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.va6722f3277520110f89bb73aba10612e .user-view-template {  
+ padding-left: 16px !important;
+ width: 98.54% !important;
+}
+
+(div.page, section.page {
+  background: linear-gradient(180deg, #4A4A4A 0%, #000 100%);
+  padding-bottom: 5rem;
+}
+
+div.ng-scope.cd5318b5c77b20110f89bb73aba10611e {
+  padding-top: 1.0rem;
+  padding-bottom: 1.5rem;
+  background-color: transparent;
+}
+
+.nav-tabs  > li.active > a, .nav-tabs  > li.active > a:hover, .nav-tabs  > li.active > a:focus{
+  background-color: #0242bb;
+  color: #ffffff !important;
+}
+
+
+ .skill-icon.notary-icon {
+  margin-right: 20px;
+  margin-left: -5px;
+}
+   
+ .avatar.soloAvatar {
+   margin-left: -14px;
+   margin-top: -5px;
+}
+
+.va6722f3277520110f89bb73aba10612e .page-title {
+  color: var(--Grayscale-Black, #000);
+font-family: Inter;
+font-size: 36px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;
+padding-top: 1.5rem !important;
+}
+
+.va6722f3277520110f89bb73aba10612e.ng-scope div.panel.panel-default.b {
+  background-color: #fff;
+}
+
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus {
+  background-color: #fff !important;
+  border-bottom: black;
+}
+
+.va6722f3277520110f89bb73aba10612e .even-row {
+ background-color: #fff !important;
+}
+
+.va6722f3277520110f89bb73aba10612e .person.row {
+  border: 1px solid var(--Grayscale-Medium-Gray, #BCBCBC); 
+}
+
+.va6722f3277520110f89bb73aba10612e .header-row {
+    color: var(--Grayscale-Black, #000);
+    font-family: Inter;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 900;
+    line-height: normal;
+  	background-color: #f5f5f5;
+    border-top-left-radius: 10px !important;
+	border-top-right-radius: 10px !important;
+  	border: 1px solid var(--Grayscale-Medium-Gray, #BCBCBC);
+}
+
+.employee-title-container {
+  color: var(--Grayscale-Black, #000);
+font-family: Inter;
+font-size: 14px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;
+}
+
+.employee-department.ng-binding {
+  color: var(--Grayscale-Black, #000);
+font-family: Inter;
+font-size: 12px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+}
+
+.org-chart-icon {
+  color: var(--Anchor-Blue, #0042BB);
+  font-size: 16px !important;
+}
