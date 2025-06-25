@@ -1,0 +1,81 @@
+<div role="row" class="person row employee-card">
+    <!-- Column 1: Name (with Avatar) -->
+    <div role="cell" class="avatar-title col-md-2 employee-profile-section">
+        <div class="user-avatar employee-avatar" ng-click="openProfile(member)">
+            <span class="navbar-avatar avatar-container">
+                <sn-avatar ng-if="!isMobile" class="avatar-large employee-avatar-large" primary="member.sys_id" show-presence="false" />
+                <sn-avatar ng-if="isMobile" class="avatar-small-medium employee-avatar-mobile" primary="member.sys_id" show-presence="false" />
+            </span>
+        </div>
+        <div class="user-title-status employee-name-section">
+            <div class="title-link employee-name-link" ng-click="openProfile(member)">{{member['name']}} </div>
+        </div>
+    </div>
+    
+    <!-- Column 2: Org Chart -->
+    <div ng-if="c.data.org_page_exists" role="cell" class="col-md-1 site-map employee-org-chart">
+        <a target="_blank" ng-href="{{c.data.org_link}}{{member.sys_id}}" class="org-chart-link">
+            <i class="fa fa-sitemap org-chart-icon"></i>
+        </a>
+    </div>
+    
+    <!-- Column 3: Job Title & Department -->
+    <div role="cell" class="col-md-3 employee-job-info">
+        <div class="employee-title-container">
+            <span class="employee-title">{{member.title | limitTo : 98}}{{member.title.length > 98 ? '...' : ''}}</span>
+        </div>
+        <div class="employee-department-container">
+            <span class="employee-department">{{member.department}}</span>
+        </div>
+    </div>
+    
+    <!-- Column 4: Contact -->
+    <div role="cell" class="col-md-3 employee-contact-section">
+        <div class="user-contact-info employee-contact-info">
+            <div class="btn-group employee-contact-buttons" ng-class="{'btn-group-xs' : isMobile, 'btn-group-md' : !isMobile}" role="group" aria-label="Contact Options">
+                <span class="m-t-xs employee-email-container">
+                    <a ng-if="member.email" href="mailto:{{member.email}}" class="email employee-email-link" ng-if="member.email" aria-label="${Send an email to {{member.email}}}"
+                        title="${Send an email to {{member.email}}}" data-toggle="tooltip">
+                        <span class="fa fa-envelope fa-1x email-icon" style="padding-right:8px;" aria-hidden="true" name="envelope" size="1"></span><span class="email-address">{{member.email}}</span>
+                    </a>
+                </span>
+                <span ng-if="member.phone" style="padding-right:24px;" class="employee-phone-container">
+                    <a href="tel:{{member.phone}}" class="phone employee-phone-link" ng-if="member.phone" aria-label="${Call {{member.phone}}}" title="${Call {{member.phone}}}"
+                        data-toggle="tooltip">
+                        <span class="fa fa-phone fa-1x phone-icon" style="padding-right:8px;" aria-hidden="true" name="phone" size="1"></span><span class="phone-number">{{member.phone}}</span>
+                    </a>
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Column 5: Location -->
+    <div role="cell" class="col-md-2 employee-location-section">
+        <div ng-if="member.location" class="primary-location-container">
+            <a ng-if="c.data.loc_dir_page_exists" target="_blank" ng-href="{{c.data.loc_dir_link}}{{member.location_id}}" class="location-link">
+                <span class="primary-location">{{member.location}}</span>
+            </a>
+            <span ng-if="!c.data.loc_dir_page_exists" class="primary-location">
+                {{member.location}}
+            </span>
+        </div>
+        <!-- Office Location from HR Profile -->
+        <div ng-if="member.u_office_location" style="font-size: 0.9em; color: #666;" class="office-location-container">
+            <span class="office-location">{{member.u_office_location}}</span>
+        </div>
+    </div>
+    
+    <!-- Column 6: Skills -->
+    <div role="cell" class="col-md-1 employee-skills-section">
+        <div class="skills-container employee-skills-container" style="display: flex; align-items: center; gap: 4px;">
+            <!-- Notary Badge (Left) -->
+            <div ng-if="member.u_notary && member.u_notary !== 'false'" class="skill-badge notary-badge">
+                <img src="sn_ec_packs.notary.png" alt="Notary" title="Notary Certified" class="skill-icon notary-icon" style="width: 20px; height: 20px;" />
+            </div>
+            <!-- First Aid Badge (Right) -->
+            <div ng-if="member.u_is_first_aid_trained && member.u_is_first_aid_trained !== 'false'" class="skill-badge first-aid-badge">
+                <img src="sn_ec_packs.first_aid.png" alt="First Aid" title="First Aid Trained" class="skill-icon first-aid-icon" style="width: 20px; height: 20px;" />
+            </div>
+        </div>
+    </div>
+</div>
