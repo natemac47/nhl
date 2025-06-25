@@ -1,0 +1,229 @@
+<div class="events-calendar-widget" ng-if="c.viewMode">
+  <div class="calendar-top-row">
+    <h2 class="calendar-title">Events Calendar</h2>
+    <div class="current-date">Today is {{ c.today | date:'MMMM d, yyyy' }}</div>
+  </div>
+
+  <div class="calendar-tabs">
+    <button class="nav-btn" ng-click="c.setView('week')" ng-class="{'active': c.viewMode === 'week'}">This Week</button>
+    <button class="nav-btn" ng-click="c.setView('month')" ng-class="{'active': c.viewMode === 'month'}">This Month</button>
+    <button class="nav-btn" ng-click="c.setView('year')" ng-class="{'active': c.viewMode === 'year'}">This Year</button>
+    <button class="nav-btn" ng-click="c.setView('nextYear')" ng-class="{'active': c.viewMode === 'nextYear'}">Next Year</button>
+  </div>
+
+  <div class="calendar-filters">
+    <select class="filter-dropdown" ng-model="c.selectedEventType" ng-change="c.applyEventTypeFilter()">
+      <option value="">All Event Types</option>
+      <option value="holiday">Holiday</option>
+      <option value="game">Games</option>
+      <option value="office">Office</option>
+    </select>
+    <select class="filter-dropdown" ng-model="c.selectedLocation" ng-change="c.applyLocationFilter()">
+      <option value="">All Locations</option>
+      <option ng-repeat="location in c.availableLocations" value="{{location}}">{{location}}</option>
+    </select>
+    <div class="search-box">
+      <input type="text" 
+             placeholder="Search for Event" 
+             ng-model="c.searchQuery"
+             ng-change="c.searchEvents()"
+             ng-blur="c.hideSearchDropdown()"
+             ng-focus="c.searchEvents()" />
+      <button ng-click="c.clearSearch()" ng-if="c.searchQuery">
+        <i class="fa fa-times"></i>
+      </button>
+      <button ng-if="!c.searchQuery">
+        <i class="fa fa-search"></i>
+      </button>
+      <div class="search-dropdown" ng-if="c.showSearchDropdown">
+        <div class="search-result-item" 
+             ng-repeat="result in c.searchResults"
+             ng-click="c.selectSearchResult(result)"
+             ng-mousedown="$event.preventDefault()">
+          <div class="search-result-title">{{result.title}}</div>
+          <div class="search-result-date">{{c.formatEventDate(result.event_date)}}</div>
+        </div>
+        <div class="search-no-results" ng-if="c.searchResults.length === 0 && c.searchQuery.length >= 2">
+          No events found
+        </div>
+      </div>
+    </div>
+    <div class="view-toggle">
+      <button ng-click="c.toggleDisplayMode('calendar')" ng-class="{'active': c.currentDisplayMode === 'calendar'}">
+        <i class="fa fa-th"></i>
+      </button>
+      <button ng-click="c.toggleDisplayMode('list')" ng-class="{'active': c.currentDisplayMode === 'list'}">
+        <i class="fa fa-list"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Calendar View Controls (only show when in calendar mode) -->
+  <div class="calendar-controls" ng-if="c.currentDisplayMode === 'calendar'">
+    <button class="nav-arrow" ng-click="c.previous()">‹</button>
+    <h3 class="calendar-period-label">
+      {{ c.baseDate | date: (c.viewMode === 'year' || c.viewMode === 'nextYear' ? 'yyyy' : 'MMMM yyyy') }}
+    </h3>
+    <button class="nav-arrow" ng-click="c.next()">›</button>
+  </div>
+
+  <!-- List View -->
+  <div class="events-list-view" ng-if="c.currentDisplayMode === 'list'">
+    <div class="list-view-header">
+      <h3>Events List</h3>
+      <div class="list-view-info">{{c.listEvents.length}} events</div>
+    </div>
+    
+    <div class="events-table-container">
+      <table class="events-table">
+        <thead>
+          <tr>
+            <th class="sortable-header" ng-click="c.sortBy('title')">
+              Event Title 
+              <span class="sort-icon">{{c.getSortIcon('title')}}</span>
+            </th>
+            <th class="sortable-header" ng-click="c.sortBy('date')">
+              Start Date 
+              <span class="sort-icon">{{c.getSortIcon('date')}}</span>
+            </th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="event-row" 
+              ng-repeat="event in c.listEvents"
+              ng-click="c.openEventModal(event)"
+              ng-class="{'clickable': event.source === 'content_portal'}">
+            <td class="event-title-cell">
+              <div class="event-title-wrapper">
+                <span class="event-dot-small" ng-class="{
+                  'holiday-event': event.source === 'holiday', 
+                  'portal-event': event.source === 'content_portal',
+                  'game-event': event.event_type === 'game'
+                }"></span>
+                <span class="event-title-text">{{event.title}}</span>
+              </div>
+            </td>
+            <td class="event-date-cell">{{event.formattedDate}}</td>
+            <td class="event-type-cell">
+              <span class="event-type-badge" ng-if="event.source === 'holiday'">Holiday</span>
+              <span class="event-type-badge portal-badge" ng-if="event.source === 'content_portal' && event.event_type === 'game'">Game</span>
+              <span class="event-type-badge portal-badge" ng-if="event.source === 'content_portal' && (!event.event_type || event.event_type === 'office')">Office</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="no-events" ng-if="c.listEvents.length === 0">
+        No events found matching your filters.
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar View (only show when in calendar mode) -->
+  <div ng-if="c.currentDisplayMode === 'calendar'">
+    <div class="calendar-days" ng-if="c.viewMode === 'month' || c.viewMode === 'week'">
+      <div>SUN</div>
+      <div>MON</div>
+      <div>TUE</div>
+      <div>WED</div>
+      <div>THU</div>
+      <div>FRI</div>
+      <div>SAT</div>
+    </div>
+
+    <div class="calendar-grid" ng-if="c.viewMode === 'month' || c.viewMode === 'week'">
+      <div class="calendar-cell"
+           ng-repeat="day in c.monthOrWeekDays"
+           ng-class="{
+             'outside': day.outside,
+             'today': day.date.toDateString() === c.today.toDateString(),
+             'has-event': day.filteredEvents.length > 0
+           }">
+        <div class="day-num"
+             ng-class="{
+               'current-month': !day.outside,
+               'outside-month': day.outside,
+               'today': day.date.toDateString() === c.today.toDateString()
+             }">{{day.day}}</div>
+        <div class="events-list">
+          <div class="event-spacer" ng-repeat="n in [].constructor(day.occupiedSlots) track by $index"></div>
+          <div class="event-item" 
+               ng-repeat="e in day.filteredEvents | limitTo:day.availableSlots"
+               ng-click="c.openEventModal(e)"
+               ng-class="{'clickable': e.source === 'content_portal'}">
+            <span class="event-dot" ng-class="{
+              'holiday-event': e.source === 'holiday', 
+              'portal-event': e.source === 'content_portal',
+              'game-event': e.event_type === 'game'
+            }"></span>
+            <span class="event-title">{{e.title}}</span>
+          </div>
+          <div class="more-events" ng-if="day.filteredEvents.length > day.availableSlots">
+            + {{day.filteredEvents.length - day.availableSlots}} More Events
+          </div>
+        </div>
+      </div>
+      
+      <div ng-repeat="spanEvent in c.filteredSpanningEvents" 
+           class="multi-day-spanning-bar"
+           ng-class="{
+             'holiday-event': spanEvent.event.source === 'holiday', 
+             'portal-event': spanEvent.event.source === 'content_portal',
+             'game-event': spanEvent.event.event_type === 'game'
+           }"
+           ng-style="{ 
+             left: 'calc(' + (spanEvent.startCol * 100 / 7) + '% + 10px)', 
+             width: 'calc(' + ((spanEvent.endCol - spanEvent.startCol + 0.3) * 100 / 7) + '% - 10px)', 
+             top: 'calc(' + (spanEvent.weekIndex * 160) + 'px + 52px + ' + (spanEvent.slot * 30) + 'px)'
+           }"
+           ng-click="c.openEventModal(spanEvent.event)">
+      </div>
+      <div ng-repeat="spanEvent in c.filteredSpanningEvents"
+           ng-if="spanEvent.showTitle"
+           class="multi-day-title"
+           ng-style="{ 
+             left: 'calc(' + (spanEvent.startCol * 100 / 7) + '% + ' + ((spanEvent.endCol - spanEvent.startCol + 0.35) * 100 / 7) + '% + 15px)', 
+             top: 'calc(' + (spanEvent.weekIndex * 160) + 'px + 54px + ' + (spanEvent.slot * 30) + 'px)'
+           }"
+           ng-click="c.openEventModal(spanEvent.event)">
+        {{spanEvent.event.title}}
+      </div>
+    </div>
+
+    <div class="calendar-year-grid" ng-if="c.viewMode === 'year' || c.viewMode === 'nextYear'">
+      <div class="calendar-cell" ng-repeat="month in c.yearMonths"
+           ng-click="c.openMonthFromYear(month.month, month.year)">
+        {{month.label}}
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Modal -->
+  <div class="event-modal-overlay" ng-if="c.showEventModal" ng-click="c.closeEventModal()">
+    <div class="event-modal" ng-click="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Event Details</h2>
+        <button class="modal-close" ng-click="c.closeEventModal()">&times;</button>
+      </div>
+      <div class="modal-content">
+        <div class="event-details">
+          <h3 class="event-name">{{c.selectedEvent.title}}</h3>
+          <div class="event-description" ng-if="c.selectedEvent.rich_text">
+            <div ng-bind-html="c.selectedEvent.rich_text"></div>
+          </div>
+          <div class="event-times">
+            <div class="event-time-row">
+              <span class="time-label">Starts</span>
+              <span class="time-value">{{c.formatEventDate(c.selectedEvent.event_date)}}</span>
+            </div>
+            <div class="event-time-row" ng-if="c.selectedEvent.event_end">
+              <span class="time-label">Ends</span>
+              <span class="time-value">{{c.formatEventDate(c.selectedEvent.event_end)}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
