@@ -1,0 +1,232 @@
+.page-title{
+  padding-top: 2.2rem;
+  padding-left: 2.2rem;
+}
+.load-more {
+  text-align: center;
+  width: 100%;
+  margin-top: 1.75rem;
+  margin-bottom: 1.75rem;
+  cursor: pointer;
+}
+
+.header-row {
+  height: 5.75rem;
+  border-bottom: 0.1rem solid #DBE1E7;
+}
+.header-column{
+  padding-top: 0.8rem;
+}
+.org-chart{
+  text-align: center;
+}
+.even-row {
+  background: #F7F7F7 
+}
+.nav-tabs {
+  border-bottom: 0.1rem solid #DBE1E7;
+}
+.tab-content{
+  margin-top: 1.6rem;
+}
+.panel-default > .panel-heading {
+  border-color: none;
+}
+h2 .panel-title{
+  font-size: 2.4rem;
+}
+.no-data{
+  padding-top: 1.75rem;
+  padding-bottom: 1.75rem;
+  text-align: center;
+}
+.team-header {
+  padding: 1.75rem 1.75rem;
+}
+.all-header {
+  padding: 0rem 28px;
+  margin-top: 1.8rem;
+}
+.team-header-title {
+  font-weight: 600;
+  font-size: 2rem;
+  margin-bottom: 1.25rem;
+}
+.user-title-status{
+  margin-left: 0.8rem;
+  margin-top: 0.8rem;
+  display:table;
+  height: 2.5rem;
+}
+
+.list-group-item{
+  z-index: 100;
+  border-right: 0.1rem solid #DBE1E7;
+  border-left: 0.1rem solid #DBE1E7;
+}
+
+.emp-search-box + .sn-icon-search-2 {
+  position: absolute;
+  right: 1.5rem;
+  top: 0.5rem;
+}
+
+.emp-group-item {
+  padding: 3px 7px 4px;
+  margin: 0;
+  cursor: pointer;
+  min-height: 1em;
+  display: block;
+  border-right: 0.1rem solid #DBE1E7;
+  border-left: 0.1rem solid #DBE1E7;
+}
+
+.emp-group-list-container {
+  max-height: 200px;
+  padding: 0 0 0 4px;
+  margin: 4px 4px 4px 0;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+.tabList{
+  padding-left: 30px;
+  margin-top: 20px;
+  >a{
+      border: none;
+      color: #293e40;
+ }
+}
+.tabs_set .nav-tabs > li.active > a{
+  color: #293e40;
+  border: none;
+  border-bottom: 0.1rem solid #FF924E;
+}
+.caret-up {
+  transform: rotate(180deg);
+}
+.user-view-template {
+  width: 100%;
+}
+.user-avatar{
+  padding-top: 1rem;
+}
+.title-link{
+  display: table-cell;
+  vertical-align: middle;
+}
+[data-tooltip]:focus{
+  visibility:hidden;
+}
+.filters {
+  padding-left: 0.5rem;
+}
+
+.fit-content {
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
+}
+.person{
+  height:auto;
+  padding:1.6rem;
+  
+  strong {
+      color: #656E81;
+      font-weight: 400;
+ }
+}
+.avatar-title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.sm-dev-padding-top {
+  padding-top: 0.5rem;
+}
+
+.sm-dev-field-label {
+  padding-right: 0.5rem;
+}
+
+.skills-checkboxes {
+  padding-top: 0.8rem;
+}
+
+/* New checkbox styles */
+.skill-checkbox-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.skill-checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.skill-checkbox label {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.skill-checkbox input[type="checkbox"] {
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  white-space: nowrap;
+}
+
+
+@media (min-width: 991px){
+  .person {
+      display: flex; !important 
+ }
+
+  .filters {
+    display: flex; !important 
+  }
+  .site-map {
+      text-align: center;
+      padding-top: 0.8rem;
+ }
+  .avatar-title{
+      padding-left: 2rem;
+ }
+  .user-filter {
+      width: 100%;
+ }
+}
+
+.person.row {
+  display: flex;
+  align-items: center;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 990px) {
+  .skills-checkboxes {
+    margin-top: 1rem;
+  }
+  
+  .skill-checkbox-container {
+    justify-content: flex-start;
+    gap: 1rem;
+  }
+  
+  .skill-checkbox label {
+    font-size: 0.9rem;
+  }
+}
