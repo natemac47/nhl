@@ -1,0 +1,1734 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2025-07-02 16:41:37">
+<sp_widget action="INSERT_OR_UPDATE">
+<category>custom</category>
+<client_script><![CDATA[function($scope) {
+  var c = this;
+  
+  c.userName = $scope.data.userName || 'there';
+  c.today = new Date();
+  c.baseDate = new Date(c.today);
+  c.viewMode = null;
+  c.monthOrWeekDays = null;
+  c.yearMonths = null;
+  c.selectedEventType = '';
+  c.selectedLocation = '';
+  c.filteredSpanningEvents = [];
+  c.availableLocations = [];
+  c.showEventModal = false;
+  c.selectedEvent = null;
+  c.searchQuery = '';
+  c.searchResults = [];
+  c.showSearchDropdown = false;
+  c.currentDisplayMode = 'calendar';
+  c.sortColumn = 'date';
+  c.sortDirection = 'asc';
+
+  c.events = $scope.data.events || [];
+  c.eventsByDate = {};
+  c.multiDayEvents = [];
+  c.multiDayEventsByDate = {};
+
+  var processedEvents = new Set();
+
+  c.processRichText = function(richText) {
+    if (!richText) return '';
+    return richText.replace(/\$\{name\}/g, c.userName)
+                   .replace(/Button Text:\s*/gi, '');
+  };
+
+  c.toggleDisplayMode = function(mode) {
+    c.currentDisplayMode = mode;
+    if (mode === 'list') {
+      c.prepareListView();
+    }
+  };
+
+  c.prepareListView = function() {
+    c.listEvents = c.filterEvents(c.events).map(function(event) {
+      return {
+        title: event.title,
+        event_date: event.event_date,
+        event_end: event.event_end,
+        source: event.source,
+        event_type: event.event_type,
+        rich_text: event.rich_text,
+        sys_id: event.sys_id,
+        region: event.region,
+        formattedDate: c.formatEventDate(event.event_date),
+        sortDate: c.getSortableDate(event.event_date)
+      };
+    });
+    
+    c.sortListEvents();
+  };
+
+  c.getSortableDate = function(dateStr) {
+    if (!dateStr || dateStr.length < 8) return new Date(0);
+    
+    var year = parseInt(dateStr.substring(0, 4));
+    var month = parseInt(dateStr.substring(4, 6)) - 1;
+    var day = parseInt(dateStr.substring(6, 8));
+    var hour = dateStr.length >= 10 ? parseInt(dateStr.substring(8, 10)) : 0;
+    var minute = dateStr.length >= 12 ? parseInt(dateStr.substring(10, 12)) : 0;
+    var second = dateStr.length >= 14 ? parseInt(dateStr.substring(12, 14)) : 0;
+    
+    var utcDate = new Date(Date.UTC(year, month, day, hour, minute, second));
+    return utcDate;
+  };
+
+  c.sortBy = function(column) {
+    if (c.sortColumn === column) {
+      c.sortDirection = c.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      c.sortColumn = column;
+      c.sortDirection = 'asc';
+    }
+    c.sortListEvents();
+  };
+
+  c.sortListEvents = function() {
+    if (!c.listEvents) return;
+    
+    c.listEvents.sort(function(a, b) {
+      var aValue, bValue;
+      
+      if (c.sortColumn === 'title') {
+        aValue = a.title.toLowerCase();
+        bValue = b.title.toLowerCase();
+      } else if (c.sortColumn === 'date') {
+        aValue = a.sortDate.getTime();
+        bValue = b.sortDate.getTime();
+      }
+      
+      if (c.sortDirection === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+  };
+
+  c.getSortIcon = function(column) {
+    if (c.sortColumn !== column) return '';
+    return c.sortDirection === 'asc' ? '▲' : '▼';
+  };
+
+  c.searchEvents = function() {
+    if (!c.searchQuery || c.searchQuery.length < 2) {
+      c.searchResults = [];
+      c.showSearchDropdown = false;
+      return;
+    }
+
+    var query = c.searchQuery.toLowerCase();
+    c.searchResults = c.events.filter(function(event) {
+      return event.source === 'content_portal' && 
+             event.title.toLowerCase().indexOf(query) !== -1;
+    }).slice(0, 10);
+
+    c.showSearchDropdown = c.searchResults.length > 0;
+  };
+
+  c.selectSearchResult = function(event) {
+    c.searchQuery = event.title;
+    c.showSearchDropdown = false;
+    c.openEventModal(event);
+  };
+
+  c.hideSearchDropdown = function() {
+    setTimeout(function() {
+      $scope.$apply(function() {
+        c.showSearchDropdown = false;
+      });
+    }, 200);
+  };
+
+  c.clearSearch = function() {
+    c.searchQuery = '';
+    c.searchResults = [];
+    c.showSearchDropdown = false;
+  };
+
+  c.openEventModal = function(event) {
+    if (event.source === 'content_portal') {
+      var processedEvent = angular.copy(event);
+      processedEvent.rich_text = c.processRichText(event.rich_text);
+      c.selectedEvent = processedEvent;
+      c.showEventModal = true;
+    }
+  };
+
+  c.closeEventModal = function() {
+    c.showEventModal = false;
+    c.selectedEvent = null;
+  };
+
+  c.formatEventDate = function(dateStr) {
+    if (!dateStr || dateStr.length < 8) return '';
+    
+    var year = parseInt(dateStr.substring(0, 4));
+    var month = parseInt(dateStr.substring(4, 6)) - 1;
+    var day = parseInt(dateStr.substring(6, 8));
+    var hour = dateStr.length >= 10 ? parseInt(dateStr.substring(8, 10)) : 0;
+    var minute = dateStr.length >= 12 ? parseInt(dateStr.substring(10, 12)) : 0;
+    var second = dateStr.length >= 14 ? parseInt(dateStr.substring(12, 14)) : 0;
+    
+    var utcDate = new Date(Date.UTC(year, month, day, hour, minute, second));
+    
+    return utcDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  c.populateLocations = function() {
+    var locationSet = new Set();
+    c.events.forEach(function(event) {
+      if (event.region && event.region.trim()) {
+        locationSet.add(event.region.trim());
+      }
+    });
+    c.availableLocations = Array.from(locationSet).sort();
+  };
+
+  c.populateLocations();
+
+  c.events.forEach(function(e) {
+    if (!e.event_date || e.event_date.length < 8) return;
+
+    var eventKey = e.title + '|' + e.event_date + '|' + (e.event_end || '');
+    if (processedEvents.has(eventKey)) return;
+    processedEvents.add(eventKey);
+
+    var startYyyy = e.event_date.substring(0, 4);
+    var startMm = e.event_date.substring(4, 6);
+    var startDd = e.event_date.substring(6, 8);
+    var startKey = startYyyy + '-' + startMm + '-' + startDd;
+
+    var startDateOnly = e.event_date.substring(0, 8);
+    var endDateOnly = e.event_end ? e.event_end.substring(0, 8) : startDateOnly;
+
+    if (!e.event_end || e.event_end.length < 8 || startDateOnly === endDateOnly) {
+      if (!c.eventsByDate[startKey]) c.eventsByDate[startKey] = [];
+      
+      var isDuplicate = c.eventsByDate[startKey].some(function(existingEvent) {
+        return existingEvent.title === e.title;
+      });
+      
+      if (!isDuplicate) {
+        c.eventsByDate[startKey].push(e);
+      }
+    } else {
+      var endYyyy = e.event_end.substring(0, 4);
+      var endMm = e.event_end.substring(4, 6);
+      var endDd = e.event_end.substring(6, 8);
+      
+      var startDate = new Date(parseInt(startYyyy), parseInt(startMm) - 1, parseInt(startDd));
+      var endDate = new Date(parseInt(endYyyy), parseInt(endMm) - 1, parseInt(endDd));
+      
+      var isDuplicateMultiDay = c.multiDayEvents.some(function(existingEvent) {
+        return existingEvent.title === e.title && 
+               existingEvent.startDate.getTime() === startDate.getTime() &&
+               existingEvent.endDate.getTime() === endDate.getTime();
+      });
+      
+      if (!isDuplicateMultiDay) {
+        var multiDayEvent = {
+          title: e.title,
+          startDate: startDate,
+          endDate: endDate,
+          sys_id: e.sys_id,
+          source: e.source,
+          event_type: e.event_type,
+          rich_text: e.rich_text,
+          region: e.region,
+          event_date: e.event_date,
+          event_end: e.event_end,
+          isMultiDay: true
+        };
+        c.multiDayEvents.push(multiDayEvent);
+        
+        var currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+          var dateKey = currentDate.toISOString().split('T')[0];
+          if (!c.multiDayEventsByDate[dateKey]) c.multiDayEventsByDate[dateKey] = [];
+          c.multiDayEventsByDate[dateKey].push(multiDayEvent);
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      }
+    }
+  });
+
+  c.applyLocationFilter = function() {
+    c.applyFilters();
+  };
+
+  c.applyEventTypeFilter = function() {
+    c.applyFilters();
+  };
+
+  c.applyFilters = function() {
+    if (c.currentDisplayMode === 'list') {
+      c.prepareListView();
+      return;
+    }
+    
+    if (!c.monthOrWeekDays) return;
+    
+    c.monthOrWeekDays.forEach(function(day) {
+      if (day && !day.outside && day.events) {
+        day.filteredEvents = c.filterEvents(day.events);
+      }
+    });
+    
+    var filteredMultiDayEvents = c.filterEvents(c.multiDayEvents);
+    c.recalculateMultiDayPositions(filteredMultiDayEvents);
+  };
+
+  c.filterEvents = function(events) {
+    return events.filter(function(event) {
+      var passesTypeFilter = true;
+      var passesLocationFilter = true;
+      
+      if (c.selectedEventType) {
+        switch (c.selectedEventType) {
+          case 'holiday':
+            passesTypeFilter = event.source === 'holiday';
+            break;
+          case 'game':
+            passesTypeFilter = event.source === 'content_portal' && event.event_type === 'game';
+            break;
+          case 'office':
+            passesTypeFilter = event.source === 'content_portal' && (!event.event_type || event.event_type === 'office');
+            break;
+          default:
+            passesTypeFilter = true;
+        }
+      }
+      
+      if (c.selectedLocation && event.source === 'holiday') {
+        passesLocationFilter = event.region === c.selectedLocation;
+      }
+      
+      return passesTypeFilter && passesLocationFilter;
+    });
+  };
+
+  c.recalculateMultiDayPositions = function(filteredMultiDayEvents) {
+    if (!c.monthOrWeekDays || c.viewMode === 'year' || c.viewMode === 'nextYear') return;
+    
+    c.filteredSpanningEvents = [];
+    var weeks = c.getWeeks(c.monthOrWeekDays);
+    var daySlots = {};
+    
+    weeks.forEach(function(week, weekIndex) {
+      var weekEvents = [];
+      
+      filteredMultiDayEvents.forEach(function(event) {
+        var startCol = -1;
+        var endCol = -1;
+        
+        week.forEach(function(day, dayIndex) {
+          if (day.date >= event.startDate && day.date <= event.endDate && !day.outside) {
+            if (startCol === -1) {
+              startCol = dayIndex;
+            }
+            endCol = dayIndex;
+          }
+        });
+        
+        if (startCol !== -1) {
+          weekEvents.push({
+            event: event,
+            startCol: startCol,
+            endCol: endCol,
+            weekIndex: weekIndex
+          });
+        }
+      });
+      
+      weekEvents.sort(function(a, b) {
+        if (a.startCol !== b.startCol) return a.startCol - b.startCol;
+        return (b.endCol - b.startCol) - (a.endCol - a.startCol);
+      });
+      
+      weekEvents.forEach(function(weekEvent) {
+        var slot = -1;
+        var placed = false;
+        
+        for (var s = 0; s < 3 && !placed; s++) {
+          var canPlace = true;
+          
+          for (var col = weekEvent.startCol; col <= weekEvent.endCol; col++) {
+            var dayIndex = weekIndex * 7 + col;
+            var day = c.monthOrWeekDays[dayIndex];
+            if (!day || day.outside) continue;
+            
+            var dayKey = day.date.toISOString().split('T')[0];
+            if (!daySlots[dayKey]) daySlots[dayKey] = { occupied: [], singleDayCount: 0 };
+            
+            if (daySlots[dayKey].occupied[s]) {
+              canPlace = false;
+              break;
+            }
+            
+            var totalEventsForDay = daySlots[dayKey].occupied.filter(Boolean).length + (day.filteredEvents ? day.filteredEvents.length : 0);
+            if (totalEventsForDay >= 3) {
+              canPlace = false;
+              break;
+            }
+          }
+          
+          if (canPlace) {
+            for (var col = weekEvent.startCol; col <= weekEvent.endCol; col++) {
+              var dayIndex = weekIndex * 7 + col;
+              var day = c.monthOrWeekDays[dayIndex];
+              if (!day || day.outside) continue;
+              
+              var dayKey = day.date.toISOString().split('T')[0];
+              if (!daySlots[dayKey]) daySlots[dayKey] = { occupied: [], singleDayCount: 0 };
+              daySlots[dayKey].occupied[s] = true;
+            }
+            
+            slot = s;
+            placed = true;
+          }
+        }
+        
+        if (placed) {
+          var isLastOccurrence = true;
+          
+          for (var laterWeek = weekEvent.weekIndex + 1; laterWeek < weeks.length; laterWeek++) {
+            var laterWeekDays = weeks[laterWeek];
+            
+            for (var dayIdx = 0; dayIdx < laterWeekDays.length; dayIdx++) {
+              var laterDay = laterWeekDays[dayIdx];
+              if (!laterDay.outside && laterDay.date >= weekEvent.event.startDate && laterDay.date <= weekEvent.event.endDate) {
+                isLastOccurrence = false;
+                break;
+              }
+            }
+            
+            if (!isLastOccurrence) break;
+          }
+          
+          c.filteredSpanningEvents.push({
+            event: weekEvent.event,
+            weekIndex: weekEvent.weekIndex,
+            startCol: weekEvent.startCol,
+            endCol: weekEvent.endCol,
+            slot: slot,
+            showTitle: isLastOccurrence
+          });
+        }
+      });
+    });
+    
+    c.monthOrWeekDays.forEach(function(day) {
+      if (day && !day.outside) {
+        var dayKey = day.date.toISOString().split('T')[0];
+        var slots = daySlots[dayKey];
+        if (slots) {
+          day.occupiedSlots = slots.occupied.filter(Boolean).length;
+          day.availableSlots = 3 - day.occupiedSlots;
+        } else {
+          day.occupiedSlots = 0;
+          day.availableSlots = 3;
+        }
+      }
+    });
+  };
+
+  function buildCalendar(view, date) {
+    var y = date.getFullYear(), m = date.getMonth();
+    var days = [], key;
+
+    if (view === 'month') {
+      var first = new Date(y, m, 1);
+      var total = new Date(y, m + 1, 0).getDate();
+      var offset = first.getDay();
+      var padEnd = (7 - ((offset + total) % 7)) % 7;
+
+      for (var p = offset - 1; p >= 0; p--) {
+        var prev = new Date(y, m, -p);
+        days.push({ date: prev, day: prev.getDate(), outside: true });
+      }
+      for (var i = 1; i <= total; i++) {
+        var cur = new Date(y, m, i);
+        key = cur.toISOString().split('T')[0];
+        var dayEvents = c.eventsByDate[key] || [];
+        var dayMultiDayEvents = c.multiDayEventsByDate[key] || [];
+        days.push({ 
+          date: cur, 
+          day: i, 
+          outside: false, 
+          events: dayEvents,
+          filteredEvents: c.filterEvents(dayEvents),
+          multiDayCount: dayMultiDayEvents.length
+        });
+      }
+      for (var n = 1; n <= padEnd; n++) {
+        var nxt = new Date(y, m + 1, n);
+        days.push({ date: nxt, day: nxt.getDate(), outside: true });
+      }
+      c.monthOrWeekDays = days;
+
+    } else if (view === 'week') {
+      var sun = new Date(date);
+      sun.setDate(sun.getDate() - sun.getDay());
+      for (var j = 0; j < 7; j++) {
+        var wd = new Date(sun);
+        wd.setDate(sun.getDate() + j);
+        key = wd.toISOString().split('T')[0];
+        var dayEvents = c.eventsByDate[key] || [];
+        var dayMultiDayEvents = c.multiDayEventsByDate[key] || [];
+        days.push({ 
+          date: wd, 
+          day: wd.getDate(), 
+          outside: false, 
+          events: dayEvents,
+          filteredEvents: c.filterEvents(dayEvents),
+          multiDayCount: dayMultiDayEvents.length
+        });
+      }
+      c.monthOrWeekDays = days;
+
+    } else {
+      var yr = view === 'nextYear' ? y + 1 : y;
+      var months = [];
+      for (var k = 0; k < 12; k++) {
+        months.push({
+          label: new Date(yr, k).toLocaleString('default', { month: 'long' }),
+          month: k,
+          year: yr
+        });
+      }
+      c.yearMonths = months;
+    }
+
+    c.calculateMultiDayPositions();
+    c.applyFilters();
+  }
+
+  c.calculateMultiDayPositions = function() {
+    if (!c.monthOrWeekDays || c.viewMode === 'year' || c.viewMode === 'nextYear') return;
+    
+    c.spanningEvents = [];
+    var weeks = c.getWeeks(c.monthOrWeekDays);
+    
+    var daySlots = {};
+    
+    weeks.forEach(function(week, weekIndex) {
+      var weekEvents = [];
+      
+      c.multiDayEvents.forEach(function(event) {
+        var startCol = -1;
+        var endCol = -1;
+        
+        week.forEach(function(day, dayIndex) {
+          if (day.date >= event.startDate && day.date <= event.endDate && !day.outside) {
+            if (startCol === -1) {
+              startCol = dayIndex;
+            }
+            endCol = dayIndex;
+          }
+        });
+        
+        if (startCol !== -1) {
+          weekEvents.push({
+            event: event,
+            startCol: startCol,
+            endCol: endCol,
+            weekIndex: weekIndex
+          });
+        }
+      });
+      
+      weekEvents.sort(function(a, b) {
+        if (a.startCol !== b.startCol) return a.startCol - b.startCol;
+        return (b.endCol - b.startCol) - (a.endCol - a.startCol);
+      });
+      
+      weekEvents.forEach(function(weekEvent) {
+        var slot = -1;
+        var placed = false;
+        
+        for (var s = 0; s < 3 && !placed; s++) {
+          var canPlace = true;
+          
+          for (var col = weekEvent.startCol; col <= weekEvent.endCol; col++) {
+            var dayIndex = weekIndex * 7 + col;
+            var day = c.monthOrWeekDays[dayIndex];
+            if (!day || day.outside) continue;
+            
+            var dayKey = day.date.toISOString().split('T')[0];
+            if (!daySlots[dayKey]) daySlots[dayKey] = { occupied: [], singleDayCount: 0 };
+            
+            if (daySlots[dayKey].occupied[s]) {
+              canPlace = false;
+              break;
+            }
+            
+            var totalEventsForDay = daySlots[dayKey].occupied.filter(Boolean).length + (day.events ? day.events.length : 0);
+            if (totalEventsForDay >= 3) {
+              canPlace = false;
+              break;
+            }
+          }
+          
+          if (canPlace) {
+            for (var col = weekEvent.startCol; col <= weekEvent.endCol; col++) {
+              var dayIndex = weekIndex * 7 + col;
+              var day = c.monthOrWeekDays[dayIndex];
+              if (!day || day.outside) continue;
+              
+              var dayKey = day.date.toISOString().split('T')[0];
+              if (!daySlots[dayKey]) daySlots[dayKey] = { occupied: [], singleDayCount: 0 };
+              daySlots[dayKey].occupied[s] = true;
+            }
+            
+            slot = s;
+            placed = true;
+          }
+        }
+        
+        if (placed) {
+          var isLastOccurrence = true;
+          var eventEndDate = weekEvent.event.endDate;
+          
+          for (var laterWeek = weekEvent.weekIndex + 1; laterWeek < weeks.length; laterWeek++) {
+            var laterWeekDays = weeks[laterWeek];
+            
+            for (var dayIdx = 0; dayIdx < laterWeekDays.length; dayIdx++) {
+              var laterDay = laterWeekDays[dayIdx];
+              if (!laterDay.outside && laterDay.date >= weekEvent.event.startDate && laterDay.date <= weekEvent.event.endDate) {
+                isLastOccurrence = false;
+                break;
+              }
+            }
+            
+            if (!isLastOccurrence) break;
+          }
+          
+          c.spanningEvents.push({
+            event: weekEvent.event,
+            weekIndex: weekEvent.weekIndex,
+            startCol: weekEvent.startCol,
+            endCol: weekEvent.endCol,
+            slot: slot,
+            showTitle: isLastOccurrence
+          });
+        }
+      });
+    });
+    
+    c.filteredSpanningEvents = c.spanningEvents;
+    
+    c.monthOrWeekDays.forEach(function(day) {
+      if (day && !day.outside) {
+        var dayKey = day.date.toISOString().split('T')[0];
+        var slots = daySlots[dayKey];
+        if (slots) {
+          day.occupiedSlots = slots.occupied.filter(Boolean).length;
+          day.availableSlots = 3 - day.occupiedSlots;
+        } else {
+          day.occupiedSlots = 0;
+          day.availableSlots = 3;
+        }
+      }
+    });
+  };
+
+  c.getWeeks = function(arr) {
+    var out = [];
+    for (var i = 0; i < arr.length; i += 7) out.push(arr.slice(i, i + 7));
+    return out;
+  };
+
+  c.setView = function(v) {
+    c.viewMode = null;
+    c.monthOrWeekDays = null;
+    c.yearMonths = null;
+    c.spanningEvents = [];
+    c.filteredSpanningEvents = [];
+
+    setTimeout(function() {
+      $scope.$applyAsync(function() {
+        c.viewMode = v;
+
+        if (v === 'week' || v === 'month') {
+          c.monthOrWeekDays = [];
+          c.yearMonths = null;
+        } else {
+          c.yearMonths = [];
+          c.monthOrWeekDays = null;
+        }
+
+        c.baseDate = new Date();
+        if (v === 'nextYear') {
+          c.baseDate.setFullYear(c.baseDate.getFullYear() + 1);
+        }
+
+        buildCalendar(v, c.baseDate);
+      });
+    }, 0);
+  };
+
+  c.openMonthFromYear = function(month, year) {
+    c.viewMode = null;
+    c.monthOrWeekDays = null;
+    c.yearMonths = null;
+    c.spanningEvents = [];
+    c.filteredSpanningEvents = [];
+
+    setTimeout(function() {
+      $scope.$applyAsync(function() {
+        c.baseDate = new Date(year, month, 1);
+        c.viewMode = 'month';
+        c.monthOrWeekDays = [];
+        c.yearMonths = null;
+        buildCalendar('month', c.baseDate);
+      });
+    }, 0);
+  };
+
+  c.next = function() {
+    if (c.viewMode === 'month') c.baseDate.setMonth(c.baseDate.getMonth() + 1);
+    else if (c.viewMode === 'week') c.baseDate.setDate(c.baseDate.getDate() + 7);
+    else c.baseDate.setFullYear(c.baseDate.getFullYear() + 1);
+    buildCalendar(c.viewMode, c.baseDate);
+  };
+
+  c.previous = function() {
+    if (c.viewMode === 'month') c.baseDate.setMonth(c.baseDate.getMonth() - 1);
+    else if (c.viewMode === 'week') c.baseDate.setDate(c.baseDate.getDate() - 7);
+    else c.baseDate.setFullYear(c.baseDate.getFullYear() - 1);
+    buildCalendar(c.viewMode, c.baseDate);
+  };
+
+  $scope.$evalAsync(function() {
+    c.setView('month');
+  });
+}]]></client_script>
+<controller_as>c</controller_as>
+<css>.events-calendar-widget {
+  font-family: Arial, sans-serif;
+  max-width: 1100px;
+  margin: auto;
+  font-size: 14px;
+}
+
+.calendar-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.current-date {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.calendar-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.calendar-tabs .nav-btn {
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: none;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 10px 20px;
+  cursor: pointer;
+  color: #333;
+}
+
+.calendar-tabs .nav-btn.active {
+  border-bottom-color: #333;
+  font-weight: 700;
+}
+
+.calendar-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.filter-dropdown {
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  flex: 1;
+  max-width: 400px;
+  position: relative;
+}
+
+.search-box input {
+  padding: 8px 12px;
+  border: none;
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.search-box button {
+  padding: 8px 12px;
+  background: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.search-result-item:hover {
+  background-color: #f5f5f5;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.search-result-date {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.search-no-results {
+  padding: 12px 16px;
+  color: #666;
+  font-style: italic;
+  text-align: center;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.view-toggle button {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+.view-toggle button.active {
+  background: #f0f0f0;
+}
+
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.calendar-controls .nav-arrow {
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-period-label {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 0;
+  padding: 10px 0;
+  background-color: #f8f8f8;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border: 1px solid #ddd;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-cell {
+  display: block;
+  height: 160px;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  position: relative;
+  text-align: left;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+.events-calendar-widget .calendar-cell.today {
+  border: 2px solid #0042BB !important;
+}
+
+.events-calendar-widget .calendar-cell .day-num {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  border-radius: 50% !important;
+  font-family: Inter !important;
+  font-size: 13px !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  margin-bottom: 4px !important;
+}
+
+.events-calendar-widget .calendar-cell .day-num.current-month {
+  background-color: #4A4A4A !important;
+  color: white !important;
+}
+
+.events-calendar-widget .calendar-cell .day-num.outside-month {
+  background-color: #BCBCBC !important;
+  color: white !important;
+}
+
+.events-calendar-widget .calendar-cell .day-num.today {
+  background-color: #0042BB !important;
+  color: white !important;
+  width: 24px !important;
+  height: 24px !important;
+  line-height: 20px !important;
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  height: 100px;
+  position: relative;
+}
+
+.event-item {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  gap: 6px;
+}
+
+.event-item.clickable {
+  cursor: pointer;
+}
+
+.event-item.clickable:hover {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.event-spacer {
+  height: 30px;
+  display: block;
+}
+
+.event-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #0055E9;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.event-dot.holiday-event {
+  background-color: #999;
+}
+
+.event-dot.portal-event {
+  background-color: #0055E9;
+}
+
+.event-dot.portal-event.game-event {
+  background-color: #C5DAFF;
+}
+
+.event-title {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  line-height: 1.2;
+}
+
+.more-events {
+  font-size: 0.75rem;
+  color: #666;
+  margin-left: 16px;
+  font-weight: 400;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.calendar-year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.calendar-year-grid .calendar-cell {
+  min-height: 100px;
+  padding: 16px;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-year-grid .calendar-cell:hover {
+  background-color: #f9f9f9;
+}
+
+.multi-day-spanning-bar {
+  position: absolute;
+  background-color: #0055E9;
+  height: 18px;
+  border-radius: 9px;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.multi-day-spanning-bar.holiday-event {
+  background-color: #999;
+}
+
+.multi-day-spanning-bar.portal-event {
+  background-color: #0055E9;
+  pointer-events: auto;
+}
+
+.multi-day-spanning-bar.portal-event.game-event {
+  background-color: #C5DAFF;
+}
+
+.multi-day-title {
+  position: absolute;
+  color: var(--Additional-Black, #000);
+  font-family: Inter;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  cursor: pointer;
+}
+
+.events-list-view {
+  margin-top: 1rem;
+}
+
+.list-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #333;
+}
+
+.list-view-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.list-view-info {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.events-table-container {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.events-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.events-table thead {
+  background-color: #f8f9fa;
+}
+
+.events-table th {
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #e0e0e0;
+  position: relative;
+}
+
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.sortable-header:hover {
+  background-color: #e9ecef;
+}
+
+.sort-icon {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.75rem;
+  color: #0055E9;
+  font-weight: bold;
+}
+
+.events-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.events-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.event-row.clickable {
+  cursor: pointer;
+}
+
+.event-row.clickable:hover {
+  background-color: #f8f9fa;
+}
+
+.events-table td {
+  padding: 16px 20px;
+  vertical-align: middle;
+}
+
+.event-title-cell {
+  width: 50%;
+}
+
+.event-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.event-dot-small {
+  width: 8px;
+  height: 8px;
+  background-color: #0055E9;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.event-dot-small.holiday-event {
+  background-color: #999;
+}
+
+.event-dot-small.portal-event {
+  background-color: #0055E9;
+}
+
+.event-dot-small.portal-event.game-event {
+  background-color: #C5DAFF;
+}
+
+.event-title-text {
+  font-weight: 500;
+  color: #333;
+  line-height: 1.4;
+}
+
+.event-date-cell {
+  width: 30%;
+  color: #666;
+}
+
+.event-type-cell {
+  width: 20%;
+}
+
+.event-type-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #e9ecef;
+  color: #495057;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.event-type-badge.portal-badge {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.no-events {
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  font-size: 1rem;
+}
+
+.event-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-modal {
+  background: #FFFFFF;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px;
+  background: #FFFFFF;
+  border: none;
+}
+
+.modal-title {
+  margin: 0;
+  color: var(--Grayscale-Black, #000);
+  font-family: Inter;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  flex: 1;
+  text-align: left;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+
+.modal-content {
+  padding: 24px;
+}
+
+.event-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+.event-description {
+  margin-bottom: 20px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.event-times {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 16px;
+}
+
+.event-time-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.time-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.time-value {
+  color: #666;
+}</css>
+<data_table>sp_instance</data_table>
+<demo_data/>
+<description/>
+<docs display_value=""/>
+<field_list/>
+<has_preview>false</has_preview>
+<id>nhl_events_calendar</id>
+<internal>false</internal>
+<link><![CDATA[function link(scope, element, attrs, controller) {
+  
+}]]></link>
+<name>NHL Events Page</name>
+<option_schema/>
+<public>false</public>
+<roles/>
+<script><![CDATA[(function() {
+  data.events = [];
+  
+  var currentUser = gs.getUser();
+  data.userName = currentUser.getDisplayName() || currentUser.getName() || 'there';
+  
+  var now = new GlideDateTime();
+  var year = now.getYearLocalTime();
+  
+  var processedHolidays = {};
+  
+  var scheduleSysId = '05c8a4b247f15a10d4fddf8c416d43bd'; 
+  var gr = new GlideRecord('cmn_schedule_span');
+  gr.addQuery('schedule', scheduleSysId);
+  gr.addQuery('type', 'exclude');
+  gr.query();
+
+  while (gr.next()) {
+    var name = gr.getValue('name');
+    var startRaw = gr.getValue('start_date_time');
+    var region = gr.getValue('u_region');
+
+    if (!startRaw) continue;
+
+    var cleanName = name.trim();
+    
+    var mmdd = startRaw.substring(4, 8);
+    var holidayDate = year + mmdd + "000000";
+    
+    var holidayKey = cleanName + '|' + mmdd + '|' + region;
+    
+    if (processedHolidays[holidayKey]) continue;
+    processedHolidays[holidayKey] = true;
+
+    data.events.push({
+      title: cleanName,
+      event_date: holidayDate,
+      event_end: null,
+      sys_id: gr.getUniqueValue(),
+      source: 'holiday',
+      region: region
+    });
+  }
+  
+  var processedPortalEvents = {};
+  
+  var contentTypeId = '3893597a0b4303008cd6e7ae37673a4c';
+  var portalGr = new GlideRecord('sn_cd_content_portal');
+  portalGr.addQuery('content_type', contentTypeId);
+  portalGr.addQuery('active', true);
+  portalGr.query();
+  
+  while (portalGr.next()) {
+    var title = portalGr.getValue('title') || portalGr.getValue('name') || 'Event';
+    var eventStart = portalGr.getValue('event_start');
+    var eventEnd = portalGr.getValue('event_end');
+    var richText = portalGr.getValue('rich_text') || '';
+    
+    var startDate = null;
+    var endDate = null;
+    
+    if (eventStart) {
+      var startGdt = new GlideDateTime(eventStart);
+      if (startGdt.isValid()) {
+        startDate = startGdt.getValue().replace(/[-:\s]/g, '');
+      }
+    }
+    
+    if (!startDate) {
+      var altStart = portalGr.getValue('start_date') || portalGr.getValue('date');
+      if (altStart) {
+        var altStartGdt = new GlideDateTime(altStart);
+        if (altStartGdt.isValid()) {
+          startDate = altStartGdt.getValue().replace(/[-:\s]/g, '');
+        }
+      }
+    }
+    
+    if (eventEnd) {
+      var endGdt = new GlideDateTime(eventEnd);
+      if (endGdt.isValid()) {
+        endDate = endGdt.getValue().replace(/[-:\s]/g, '');
+      }
+    } else if (!endDate && startDate) {
+      var altEnd = portalGr.getValue('end_date');
+      if (altEnd) {
+        var altEndGdt = new GlideDateTime(altEnd);
+        if (altEndGdt.isValid()) {
+          endDate = altEndGdt.getValue().replace(/[-:\s]/g, '');
+        }
+      } else {
+        endDate = startDate;
+      }
+    }
+    
+    if (startDate && startDate.length >= 8) {
+      var cleanTitle = title.trim();
+      var portalKey = cleanTitle + '|' + startDate + '|' + (endDate || '');
+      
+      if (processedPortalEvents[portalKey]) continue;
+      processedPortalEvents[portalKey] = true;
+      
+      data.events.push({
+        title: cleanTitle,
+        event_date: startDate,
+        event_end: endDate,
+        rich_text: richText,
+        sys_id: portalGr.getUniqueValue(),
+        source: 'content_portal',
+        event_type: portalGr.getValue('u_event_type') || '',
+        region: ''
+      });
+    }
+  }
+})();]]></script>
+<servicenow>false</servicenow>
+<sys_class_name>sp_widget</sys_class_name>
+<sys_created_by>admin</sys_created_by>
+<sys_created_on>2025-05-23 00:17:32</sys_created_on>
+<sys_id>62286fe383ade2103fa59d50ceaad310</sys_id>
+<sys_mod_count>121</sys_mod_count>
+<sys_name>NHL Events Page</sys_name>
+<sys_package display_value="Employee Center Core" source="sn_hr_sp">3d1da2705b021200a4656ede91f91ab6</sys_package>
+<sys_policy/>
+<sys_scope display_value="Employee Center Core">3d1da2705b021200a4656ede91f91ab6</sys_scope>
+<sys_update_name>sp_widget_62286fe383ade2103fa59d50ceaad310</sys_update_name>
+<sys_updated_by>nate.macarelli</sys_updated_by>
+<sys_updated_on>2025-07-02 16:38:54</sys_updated_on>
+<template><![CDATA[<div class="events-calendar-widget" ng-if="c.viewMode">
+  <div class="calendar-top-row">
+    <h2 class="calendar-title">Events Calendar</h2>
+    <div class="current-date">Today is {{ c.today | date:'MMMM d, yyyy' }}</div>
+  </div>
+
+  <div class="calendar-tabs">
+    <button class="nav-btn" ng-click="c.setView('week')" ng-class="{'active': c.viewMode === 'week'}">This Week</button>
+    <button class="nav-btn" ng-click="c.setView('month')" ng-class="{'active': c.viewMode === 'month'}">This Month</button>
+    <button class="nav-btn" ng-click="c.setView('year')" ng-class="{'active': c.viewMode === 'year'}">This Year</button>
+    <button class="nav-btn" ng-click="c.setView('nextYear')" ng-class="{'active': c.viewMode === 'nextYear'}">Next Year</button>
+  </div>
+
+  <div class="calendar-filters">
+    <select class="filter-dropdown" ng-model="c.selectedEventType" ng-change="c.applyEventTypeFilter()">
+      <option value="">All Event Types</option>
+      <option value="holiday">Holiday</option>
+      <option value="game">Games</option>
+      <option value="office">Office</option>
+    </select>
+    <select class="filter-dropdown" ng-model="c.selectedLocation" ng-change="c.applyLocationFilter()">
+      <option value="">All Locations</option>
+      <option ng-repeat="location in c.availableLocations" value="{{location}}">{{location}}</option>
+    </select>
+    <div class="search-box">
+      <input type="text" 
+             placeholder="Search for Event" 
+             ng-model="c.searchQuery"
+             ng-change="c.searchEvents()"
+             ng-blur="c.hideSearchDropdown()"
+             ng-focus="c.searchEvents()" />
+      <button ng-click="c.clearSearch()" ng-if="c.searchQuery">
+        <i class="fa fa-times"></i>
+      </button>
+      <button ng-if="!c.searchQuery">
+        <i class="fa fa-search"></i>
+      </button>
+      <div class="search-dropdown" ng-if="c.showSearchDropdown">
+        <div class="search-result-item" 
+             ng-repeat="result in c.searchResults"
+             ng-click="c.selectSearchResult(result)"
+             ng-mousedown="$event.preventDefault()">
+          <div class="search-result-title">{{result.title}}</div>
+          <div class="search-result-date">{{c.formatEventDate(result.event_date)}}</div>
+        </div>
+        <div class="search-no-results" ng-if="c.searchResults.length === 0 && c.searchQuery.length >= 2">
+          No events found
+        </div>
+      </div>
+    </div>
+    <div class="view-toggle">
+      <button ng-click="c.toggleDisplayMode('calendar')" ng-class="{'active': c.currentDisplayMode === 'calendar'}">
+        <i class="fa fa-th"></i>
+      </button>
+      <button ng-click="c.toggleDisplayMode('list')" ng-class="{'active': c.currentDisplayMode === 'list'}">
+        <i class="fa fa-list"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Calendar View Controls (only show when in calendar mode) -->
+  <div class="calendar-controls" ng-if="c.currentDisplayMode === 'calendar'">
+    <button class="nav-arrow" ng-click="c.previous()">‹</button>
+    <h3 class="calendar-period-label">
+      {{ c.baseDate | date: (c.viewMode === 'year' || c.viewMode === 'nextYear' ? 'yyyy' : 'MMMM yyyy') }}
+    </h3>
+    <button class="nav-arrow" ng-click="c.next()">›</button>
+  </div>
+
+  <!-- List View -->
+  <div class="events-list-view" ng-if="c.currentDisplayMode === 'list'">
+    <div class="list-view-header">
+      <h3>Events List</h3>
+      <div class="list-view-info">{{c.listEvents.length}} events</div>
+    </div>
+    
+    <div class="events-table-container">
+      <table class="events-table">
+        <thead>
+          <tr>
+            <th class="sortable-header" ng-click="c.sortBy('title')">
+              Event Title 
+              <span class="sort-icon">{{c.getSortIcon('title')}}</span>
+            </th>
+            <th class="sortable-header" ng-click="c.sortBy('date')">
+              Start Date 
+              <span class="sort-icon">{{c.getSortIcon('date')}}</span>
+            </th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="event-row" 
+              ng-repeat="event in c.listEvents"
+              ng-click="c.openEventModal(event)"
+              ng-class="{'clickable': event.source === 'content_portal'}">
+            <td class="event-title-cell">
+              <div class="event-title-wrapper">
+                <span class="event-dot-small" ng-class="{
+                  'holiday-event': event.source === 'holiday', 
+                  'portal-event': event.source === 'content_portal',
+                  'game-event': event.event_type === 'game'
+                }"></span>
+                <span class="event-title-text">{{event.title}}</span>
+              </div>
+            </td>
+            <td class="event-date-cell">{{event.formattedDate}}</td>
+            <td class="event-type-cell">
+              <span class="event-type-badge" ng-if="event.source === 'holiday'">Holiday</span>
+              <span class="event-type-badge portal-badge" ng-if="event.source === 'content_portal' && event.event_type === 'game'">Game</span>
+              <span class="event-type-badge portal-badge" ng-if="event.source === 'content_portal' && (!event.event_type || event.event_type === 'office')">Office</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="no-events" ng-if="c.listEvents.length === 0">
+        No events found matching your filters.
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar View (only show when in calendar mode) -->
+  <div ng-if="c.currentDisplayMode === 'calendar'">
+    <div class="calendar-days" ng-if="c.viewMode === 'month' || c.viewMode === 'week'">
+      <div>SUN</div>
+      <div>MON</div>
+      <div>TUE</div>
+      <div>WED</div>
+      <div>THU</div>
+      <div>FRI</div>
+      <div>SAT</div>
+    </div>
+
+    <div class="calendar-grid" ng-if="c.viewMode === 'month' || c.viewMode === 'week'">
+      <div class="calendar-cell"
+           ng-repeat="day in c.monthOrWeekDays"
+           ng-class="{
+             'outside': day.outside,
+             'today': day.date.toDateString() === c.today.toDateString(),
+             'has-event': day.filteredEvents.length > 0
+           }">
+        <div class="day-num"
+             ng-class="{
+               'current-month': !day.outside,
+               'outside-month': day.outside,
+               'today': day.date.toDateString() === c.today.toDateString()
+             }">{{day.day}}</div>
+        <div class="events-list">
+          <div class="event-spacer" ng-repeat="n in [].constructor(day.occupiedSlots) track by $index"></div>
+          <div class="event-item" 
+               ng-repeat="e in day.filteredEvents | limitTo:day.availableSlots"
+               ng-click="c.openEventModal(e)"
+               ng-class="{'clickable': e.source === 'content_portal'}">
+            <span class="event-dot" ng-class="{
+              'holiday-event': e.source === 'holiday', 
+              'portal-event': e.source === 'content_portal',
+              'game-event': e.event_type === 'game'
+            }"></span>
+            <span class="event-title">{{e.title}}</span>
+          </div>
+          <div class="more-events" ng-if="day.filteredEvents.length > day.availableSlots">
+            + {{day.filteredEvents.length - day.availableSlots}} More Events
+          </div>
+        </div>
+      </div>
+      
+      <div ng-repeat="spanEvent in c.filteredSpanningEvents" 
+           class="multi-day-spanning-bar"
+           ng-class="{
+             'holiday-event': spanEvent.event.source === 'holiday', 
+             'portal-event': spanEvent.event.source === 'content_portal',
+             'game-event': spanEvent.event.event_type === 'game'
+           }"
+           ng-style="{ 
+             left: 'calc(' + (spanEvent.startCol * 100 / 7) + '% + 10px)', 
+             width: 'calc(' + ((spanEvent.endCol - spanEvent.startCol + 0.3) * 100 / 7) + '% - 10px)', 
+             top: 'calc(' + (spanEvent.weekIndex * 160) + 'px + 52px + ' + (spanEvent.slot * 30) + 'px)'
+           }"
+           ng-click="c.openEventModal(spanEvent.event)">
+      </div>
+      <div ng-repeat="spanEvent in c.filteredSpanningEvents"
+           ng-if="spanEvent.showTitle"
+           class="multi-day-title"
+           ng-style="{ 
+             left: 'calc(' + (spanEvent.startCol * 100 / 7) + '% + ' + ((spanEvent.endCol - spanEvent.startCol + 0.35) * 100 / 7) + '% + 15px)', 
+             top: 'calc(' + (spanEvent.weekIndex * 160) + 'px + 54px + ' + (spanEvent.slot * 30) + 'px)'
+           }"
+           ng-click="c.openEventModal(spanEvent.event)">
+        {{spanEvent.event.title}}
+      </div>
+    </div>
+
+    <div class="calendar-year-grid" ng-if="c.viewMode === 'year' || c.viewMode === 'nextYear'">
+      <div class="calendar-cell" ng-repeat="month in c.yearMonths"
+           ng-click="c.openMonthFromYear(month.month, month.year)">
+        {{month.label}}
+      </div>
+    </div>
+  </div>
+
+  <div class="event-modal-overlay" ng-if="c.showEventModal" ng-click="c.closeEventModal()">
+    <div class="event-modal" ng-click="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="event-details">
+          <h3 class="event-name">{{c.selectedEvent.title}}</h3>
+          <div class="event-description" ng-if="c.selectedEvent.rich_text">
+            <div ng-bind-html="c.selectedEvent.rich_text"></div>
+          </div>
+          <div class="event-times">
+            <div class="event-time-row">
+              <span class="time-label">Starts</span>
+              <span class="time-value">{{c.formatEventDate(c.selectedEvent.event_date)}}</span>
+            </div>
+            <div class="event-time-row" ng-if="c.selectedEvent.event_end">
+              <span class="time-label">Ends</span>
+              <span class="time-value">{{c.formatEventDate(c.selectedEvent.event_end)}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>]]></template>
+</sp_widget>
+</unload>
